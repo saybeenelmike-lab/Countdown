@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countdown Timer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            inter: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* Gray background for the main countdown card */
+    #mainCard {
+      background: rgba(75, 85, 99, 0.82);
+    }
+
+    .glass-box {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    /* Sticker Effect for Uploaded Custom Image */
+    .sticker-effect {
+      filter: 
+        drop-shadow(0px 0px 2px #ffffff)
+        drop-shadow(0px 0px 4px #ffffff)
+        drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.5));
+      transform: rotate(-2deg);
+      transition: all 0.3s ease-in-out;
+    }
+
+    .sticker-effect:hover {
+      transform: rotate(0deg) scale(1.05);
+    }
+
+    /* Pulse animation */
+    .time-unit {
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .pulse-anim {
+      transform: scale(1.12);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between relative overflow-x-hidden">
+
+  <!-- Background Layer -->
+  <div id="bgLayer" class="fixed inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500 z-0" style="background-image: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);">
+    <div id="bgOverlay" class="absolute inset-0 bg-black/40 transition-all duration-300"></div>
+  </div>
+
+  <!-- Header Section -->
+  <header class="relative z-20 w-full max-w-7xl mx-auto p-4 md:p-6 flex justify-between items-center">
+    <div class="glass-card px-4 py-2 rounded-full flex items-center gap-2.5 shadow-xl">
+      <i class="fa-solid fa-clock text-sky-400 text-lg"></i>
+      <span class="font-bold text-sm md:text-base">Countdown Timer</span>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="glass-card hover:bg-white/20 text-white px-4 py-2 rounded-full flex items-center gap-2 text-xs md:text-sm font-medium transition shadow-lg border border-white/20">
+        <i class="fa-solid fa-sliders text-sky-400"></i>
+        <span>Customize</span>
+      </button>
+
+      <button onclick="toggleFullscreen()" class="glass-card hover:bg-white/20 text-white p-2.5 rounded-full flex items-center justify-center transition shadow-lg border border-white/20">
+        <i id="fullscreenIcon" class="fa-solid fa-expand text-xs md:text-sm"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Card -->
+  <main class="relative z-10 flex-1 flex flex-col items-center justify-center p-4 w-full">
+
+    <div id="mainCard" class="glass-card p-6 md:p-8 rounded-3xl max-w-sm md:max-w-md w-full text-center shadow-2xl transition-all duration-300 relative overflow-hidden my-auto">
+
+      <!-- Uploaded Sticker Container (Increased Image Size) -->
+      <div id="logoContainer" class="hidden mb-4 flex justify-center items-center py-1">
+        <img id="customLogoImg" src="" alt="Event Sticker" class="sticker-effect max-h-48 md:max-h-60 w-auto max-w-[85%] object-contain cursor-pointer">
+      </div>
+
+      <!-- Title -->
+      <h1 id="displayTitle" class="text-xl md:text-2xl font-extrabold mb-1.5 text-white leading-tight drop-shadow-md">
+        The Big Launch Event 🎉
+      </h1>
+
+      <!-- Description -->
+      <p id="displayDesc" class="text-slate-200 text-xs md:text-sm mb-5 max-w-xs mx-auto font-light leading-relaxed drop-shadow">
+        Counting down to our special event date. Stay tuned!
+      </p>
+
+      <!-- Countdown Display Grid -->
+      <div class="grid grid-cols-4 gap-2 my-2">
+
+        <div class="glass-box p-2.5 md:p-3 rounded-xl flex flex-col justify-center items-center shadow-inner hover:scale-105 transition-transform">
+          <span id="days" class="time-unit text-xl md:text-2xl font-black tracking-tight text-white">00</span>
+          <span class="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-300">Days</span>
+        </div>
+
+        <div class="glass-box p-2.5 md:p-3 rounded-xl flex flex-col justify-center items-center shadow-inner hover:scale-105 transition-transform">
+          <span id="hours" class="time-unit text-xl md:text-2xl font-black tracking-tight text-white">00</span>
+          <span class="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-300">Hours</span>
+        </div>
+
+        <div class="glass-box p-2.5 md:p-3 rounded-xl flex flex-col justify-center items-center shadow-inner hover:scale-105 transition-transform">
+          <span id="minutes" class="time-unit text-xl md:text-2xl font-black tracking-tight text-white">00</span>
+          <span class="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-300">Mins</span>
+        </div>
+
+        <div class="glass-box p-2.5 md:p-3 rounded-xl flex flex-col justify-center items-center shadow-inner hover:scale-105 transition-transform">
+          <span id="seconds" class="time-unit text-xl md:text-2xl font-black tracking-tight text-sky-400">00</span>
+          <span class="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-300">Secs</span>
+        </div>
+
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-white/10 text-xs text-slate-300 flex items-center justify-center gap-1.5">
+        <i class="fa-regular fa-calendar-check text-sky-400"></i>
+        <span>Target Date: <strong id="displayTargetDate" class="text-white font-bold">--/--/----</strong></span>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Sidebar Customization Panel -->
+  <aside id="sidebar" class="fixed top-0 left-0 h-full w-full sm:w-96 glass-card bg-slate-900/95 border-r border-white/10 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto flex flex-col shadow-2xl">
+
+    <div class="p-5 border-b border-white/10 flex justify-between items-center sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-wand-magic-sparkles text-sky-400"></i>
+        <h2 class="font-bold text-lg text-white">Customize Timer</h2>
+      </div>
+      <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+    </div>
+
+    <div class="p-5 space-y-6 flex-1">
+
+      <!-- Event Details -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-sky-400 border-b border-sky-500/20 pb-1">
+          1. Event Details
+        </h3>
+
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">Event Title</label>
+          <input type="text" id="inputTitle" value="The Big Launch Event 🎉" oninput="updateTextContent()" class="w-full bg-slate-800 border border-white/15 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-400">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">Description</label>
+          <textarea id="inputDesc" rows="2" oninput="updateTextContent()" class="w-full bg-slate-800 border border-white/15 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-400">Counting down to our special event date. Stay tuned!</textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs text-slate-300 mb-1">Target Date</label>
+            <input type="date" id="inputDate" onchange="updateTargetDate()" class="w-full bg-slate-800 border border-white/15 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-400">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-300 mb-1">Target Time</label>
+            <input type="time" id="inputTime" value="00:00" onchange="updateTargetDate()" class="w-full bg-slate-800 border border-white/15 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-400">
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Image Section -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-sky-400 border-b border-sky-500/20 pb-1">
+          2. Sticker / Logo Design
+        </h3>
+
+        <div>
+          <input type="file" id="logoUploadInput" accept="image/*" onchange="handleLogoUpload(event)" class="hidden">
+          <label for="logoUploadInput" class="flex items-center justify-center gap-2 w-full bg-slate-800 hover:bg-slate-700 border border-dashed border-white/30 rounded-xl py-3 px-4 cursor-pointer text-xs text-slate-300 transition">
+            <i class="fa-solid fa-cloud-arrow-up text-lg text-sky-400"></i>
+            <span>Upload Sticker Image</span>
+          </label>
+          <button id="removeLogoBtn" onclick="removeCustomLogo()" class="hidden text-xs text-red-400 hover:text-red-300 mt-2 flex items-center gap-1">
+            <i class="fa-solid fa-trash"></i> Remove Image
+          </button>
+        </div>
+      </div>
+
+      <!-- Background Upload -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-sky-400 border-b border-sky-500/20 pb-1">
+          3. Background Options
+        </h3>
+
+        <div>
+          <input type="file" id="bgUploadInput" accept="image/*" onchange="handleBgUpload(event)" class="hidden">
+          <label for="bgUploadInput" class="flex items-center justify-center gap-2 w-full bg-slate-800 hover:bg-slate-700 border border-dashed border-white/30 rounded-xl py-3 px-4 cursor-pointer text-xs text-slate-300 transition">
+            <i class="fa-solid fa-image text-lg text-sky-400"></i>
+            <span>Upload Custom Background</span>
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-300 mb-2">Preset Backgrounds</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="setGradientBg('linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%)')" class="h-9 rounded-lg bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 border border-white/20"></button>
+            <button onclick="setGradientBg('linear-gradient(135deg, #064e3b 0%, #022c22 100%)')" class="h-9 rounded-lg bg-gradient-to-r from-emerald-900 to-teal-950 border border-white/20"></button>
+            <button onclick="setGradientBg('linear-gradient(135deg, #881337 0%, #4c0519 100%)')" class="h-9 rounded-lg bg-gradient-to-r from-rose-900 to-pink-950 border border-white/20"></button>
+            <button onclick="setGradientBg('linear-gradient(135deg, #451a03 0%, #1a0901 100%)')" class="h-9 rounded-lg bg-gradient-to-r from-amber-900 to-stone-950 border border-white/20"></button>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs text-slate-300 mb-1">
+            <span>Background Dimming</span>
+            <span id="overlayValText">40%</span>
+          </div>
+          <input type="range" id="overlayRange" min="0" max="90" value="40" oninput="setOverlayOpacity(this.value)" class="w-full accent-sky-400 cursor-pointer">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="p-4 border-t border-white/10 bg-slate-900/90 backdrop-blur-md flex gap-2">
+      <button onclick="toggleSidebar()" class="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-lg">
+        Save & Close
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- Footer -->
+  <footer class="relative z-10 text-center text-xs text-slate-400 py-4">
+    Countdown Timer App © 2026
+  </footer>
+
+  <script>
+    let targetTime = 0;
+    let timerLoop = null;
+
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 30);
+
+    window.onload = function() {
+      const dateString = defaultDate.toISOString().split('T')[0];
+      document.getElementById('inputDate').value = dateString;
+
+      updateTargetDate();
+      startTimer();
+    };
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    }
+
+    function toggleFullscreen() {
+      const icon = document.getElementById('fullscreenIcon');
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+        icon.classList.replace('fa-expand', 'fa-compress');
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+          icon.classList.replace('fa-compress', 'fa-expand');
+        }
+      }
+    }
+
+    function updateTextContent() {
+      const title = document.getElementById('inputTitle').value || 'Event Title';
+      const desc = document.getElementById('inputDesc').value || '';
+      document.getElementById('displayTitle').innerText = title;
+      document.getElementById('displayDesc').innerText = desc;
+    }
+
+    function updateTargetDate() {
+      const dateVal = document.getElementById('inputDate').value;
+      const timeVal = document.getElementById('inputTime').value || '00:00';
+
+      if (!dateVal) return;
+
+      const [hours, minutes] = timeVal.split(':');
+      const target = new Date(dateVal);
+      target.setHours(parseInt(hours) || 0, parseInt(minutes) || 0, 0, 0);
+
+      targetTime = target.getTime();
+
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      document.getElementById('displayTargetDate').innerText = target.toLocaleDateString('en-US', options);
+
+      calculateTime();
+    }
+
+    function startTimer() {
+      if (timerLoop) clearInterval(timerLoop);
+      timerLoop = setInterval(calculateTime, 1000);
+    }
+
+    function calculateTime() {
+      const now = new Date().getTime();
+      const diff = targetTime - now;
+
+      const daysEl = document.getElementById('days');
+      const hoursEl = document.getElementById('hours');
+      const minutesEl = document.getElementById('minutes');
+      const secondsEl = document.getElementById('seconds');
+
+      if (diff <= 0) {
+        daysEl.innerText = '00';
+        hoursEl.innerText = '00';
+        minutesEl.innerText = '00';
+        secondsEl.innerText = '00';
+        document.getElementById('displayTitle').innerText = "Event Has Started! 🎉";
+        return;
+      }
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeWithPulse(daysEl, d < 10 ? '0' + d : d);
+      setTimeWithPulse(hoursEl, h < 10 ? '0' + h : h);
+      setTimeWithPulse(minutesEl, m < 10 ? '0' + m : m);
+      setTimeWithPulse(secondsEl, s < 10 ? '0' + s : s);
+    }
+
+    function setTimeWithPulse(el, val) {
+      if (el.innerText !== val.toString()) {
+        el.innerText = val;
+        el.classList.add('pulse-anim');
+        setTimeout(() => el.classList.remove('pulse-anim'), 200);
+      }
+    }
+
+    function handleBgUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('bgLayer').style.backgroundImage = `url('${evt.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleLogoUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('customLogoImg').src = evt.target.result;
+          document.getElementById('logoContainer').classList.remove('hidden');
+          document.getElementById('removeLogoBtn').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeCustomLogo() {
+      document.getElementById('customLogoImg').src = '';
+      document.getElementById('logoContainer').classList.add('hidden');
+      document.getElementById('removeLogoBtn').classList.add('hidden');
+      document.getElementById('logoUploadInput').value = '';
+    }
+
+    function setGradientBg(gradientStr) {
+      document.getElementById('bgLayer').style.backgroundImage = gradientStr;
+    }
+
+    function setOverlayOpacity(val) {
+      document.getElementById('bgOverlay').style.backgroundColor = `rgba(0, 0, 0, ${val / 100})`;
+      document.getElementById('overlayValText').innerText = `${val}%`;
+    }
+  </script>
+</body>
+</html>
